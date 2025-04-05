@@ -115,7 +115,7 @@ def draw_menu_overlay(frame, active_filters):
 
     menu_items = [
         ("[m] Motion Blur", active_filters["motion"]),
-        ("[v] Vision Blur", active_filters["vblur"]),
+        ("[v] Short-Sightedness", active_filters["vblur"]),
         ("[1-4] Vision Levels", None),
         ("[g] Glitch", active_filters["glitch"]),
         ("[f] Fisheye", active_filters["fisheye"]),
