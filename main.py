@@ -2,11 +2,6 @@ import cv2
 import numpy as np
 import random
 
-# Add a neon-like text overlay
-def draw_neon_text(image, text, position, color, thickness=2, font_size=3):
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    cv2.putText(image, text, position, font, font_size, color, thickness, cv2.LINE_AA)
-
 def apply_motion_blur(image, kernel_size=15):
     kernel = np.zeros((kernel_size, kernel_size))
     kernel[int((kernel_size - 1)/2), :] = np.ones(kernel_size)
@@ -65,15 +60,45 @@ def apply_fisheye_effect(image):
     fisheye_image = cv2.remap(image, x_distorted, y_distorted, interpolation=cv2.INTER_LINEAR)
     return fisheye_image
 
+def apply_heatmap(image):
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    heatmap = cv2.applyColorMap(gray, cv2.COLORMAP_JET)
+    return heatmap
+
+
+def apply_green_teal_filter(image):
+    # Split the image into its RGB channels
+    b, g, r = cv2.split(image)
+
+    # Increase the green and blue channels, decrease the red channel
+    g = cv2.add(g, 60)  # Increase the green channel
+    b = cv2.add(b, 60)  # Increase the blue channel
+    r = cv2.subtract(r, 60)  # Decrease the red channel
+
+    # Merge the channels back together
+    image = cv2.merge([b, g, r])
+    
+    return image
+
+
+def apply_sharpening(img):
+    sharpening_kernel = np.array([[-1, -1, -1],
+    [-1, 9, -1],
+    [-1, -1, -1]])
+
+    # Apply the sharpening kernel to the image
+    sharpened_img = cv2.filter2D(img, -1, sharpening_kernel)
+
+    return sharpened_img
+
 # Start video capture
 cap = cv2.VideoCapture(0)
-
 if not cap.isOpened():
     print("Error: Could not open camera.")
     exit()
 
 print("Press 'q' to quit.")
-print("Press 'm' for Motion Blur, 'v' for VHS Filter, 'g' for Glitch Effects, 'f' for Fisheye, 't' for Neon Text.")
+print("Press 'm' for Motion Blur, 'v' for VHS Filter, 'g' for Glitch Effects, 'f' for Fisheye, 't' for Neon Text, 's' for Sharpening.")
 
 # Initialize all filters as off
 apply_motion = False
@@ -81,6 +106,8 @@ apply_vhs = False
 apply_glitch = False
 apply_fisheye = False
 apply_neon_text = False
+apply_sharpen = False
+apply_green_teal = False  # Green-Teal filter
 
 glitch_intensity = 0.1  # Default glitch intensity
 
@@ -103,9 +130,11 @@ while True:
     if apply_fisheye:
         frame = apply_fisheye_effect(frame)
 
-    if apply_neon_text:
-        # Add overlay text (Neon Flicker effect)
-        draw_neon_text(frame, "ERROR", (100, 100), (random.randint(100, 255), random.randint(100, 255), random.randint(100, 255)))
+    if apply_sharpen:
+        frame = apply_sharpening(frame)  # Apply sharpening filter
+
+    if apply_green_teal:
+        frame = apply_green_teal_filter(frame)
 
     # Display the final frame
     cv2.imshow("VHS Art Experience", frame)
@@ -123,8 +152,15 @@ while True:
         apply_glitch = not apply_glitch  # Toggle glitch effect
     elif key == ord('f'):
         apply_fisheye = not apply_fisheye  # Toggle fisheye lens
-    elif key == ord('t'):
-        apply_neon_text = not apply_neon_text  # Toggle neon text overlay
+    elif key == ord('s'):
+        apply_sharpen = not apply_sharpen  # Toggle sharpening effect
+    elif key == ord('h'):
+        heat = apply_heatmap(frame)
+        cv2.imshow("Heatmap Effect", heat)
+        cv2.imwrite("heatmap_output.jpg", heat)
+        print("Heatmap image saved as heatmap_output.jpg")
+    elif key == ord('p'):
+        apply_green_teal = not apply_green_teal  # Toggle green-teal filter
 
 cap.release()
 cv2.destroyAllWindows()
