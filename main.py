@@ -38,19 +38,17 @@ def apply_glitch_effects(frame, glitch_intensity):
         frame = apply_vhs_filter(frame)
     return frame
     
-def simulate_eyesight_blur(image, vision="20/20"):
-    # Define a basic mapping of vision to blur intensity
-    vision_map = {
-        "20/20": 1,
-        "20/40": 5,
-        "20/60": 10,
-        "20/80": 15,
-        "20/100": 20,
-        "20/200": 30
+def simulate_vision_blur(image, vision_level='20/20'):
+    blur_map = {
+        '20/20': 1,
+        '20/40': 5,
+        '20/60': 10,
+        '20/100': 15,
+        '20/200': 25
     }
-    blur_strength = vision_map.get(vision, 1)  # Default to 20/20
-    kernel = np.ones((blur_strength, blur_strength), np.float32) / (blur_strength ** 2)
-    return cv2.filter2D(image, -1, kernel)
+    kernel_size = blur_map.get(vision_level, 1)
+    return cv2.GaussianBlur(image, (kernel_size*2+1, kernel_size*2+1), 0)
+
     
 # Fisheye lens effect
 def apply_fisheye_effect(image):
@@ -175,12 +173,15 @@ while True:
         print("Heatmap image saved as heatmap_output.jpg")
     elif key == ord('p'):
         apply_green_teal = not apply_green_teal  # Toggle green-teal filter
-     elif key == ord('e'):
-        vision_input = input("Enter eyesight level (e.g., 20/20, 20/100): ")
-        simulated_blur = simulate_eyesight_blur(frame.copy(), vision=vision_input)
-        cv2.imshow(f"Simulated Vision: {vision_input}", simulated_blur)
-        filename = f"vision_{vision_input.replace('/', '_')}.jpg"
-        cv2.imwrite(filename, simulated_blur)
-        print(f"Simulated vision image saved as {filename}")
+     elif key == ord('1'):
+        mode = '20/40'
+    elif key == ord('2'):
+        mode = '20/60'
+    elif key == ord('3'):
+        mode = '20/100'
+    elif key == ord('4'):
+        mode = '20/200'
+    elif key == ord('q'):
+        break
 cap.release()
 cv2.destroyAllWindows()
