@@ -56,7 +56,7 @@ def apply_fisheye_effect(image):
     y_distorted = np.clip(y_distorted * (height // 2) + height // 2, 0, height - 1).astype(np.float32)
     return cv2.remap(image, x_distorted, y_distorted, interpolation=cv2.INTER_LINEAR)
 
-def apply_heatmap(image):
+def apply_snake_vision(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     return cv2.applyColorMap(gray, cv2.COLORMAP_JET)
 
@@ -84,19 +84,19 @@ def apply_sharpening(img):
                                   [-1, -1, -1]])
     return cv2.filter2D(img, -1, sharpening_kernel)
 
-def dog_vision(img):
+def bat_vision(img):
     img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     img_hsv[..., 0] = np.clip(img_hsv[..., 0], 0, 100)
     img_hsv[..., 1] = np.clip(img_hsv[..., 1], 40, 255)
-    dog_img = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR)
-    dog_img = cv2.GaussianBlur(dog_img, (7, 7), 0)
-    rows, cols = dog_img.shape[:2]
+    bat_img = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR)
+    bat_img = cv2.GaussianBlur(bat_img, (7, 7), 0)
+    rows, cols = bat_img.shape[:2]
     x, y = np.meshgrid(np.linspace(-1, 1, cols), np.linspace(-1, 1, rows))
     d = np.sqrt(x**2 + y**2)
     vignette = 1 - np.clip(d, 0, 1)
     vignette = cv2.merge([vignette]*3)
-    dog_img = cv2.multiply(dog_img.astype(np.float32), vignette.astype(np.float32))
-    return np.clip(dog_img, 0, 255).astype(np.uint8)
+    bat_img = cv2.multiply(bat_img.astype(np.float32), vignette.astype(np.float32))
+    return np.clip(bat_img, 0, 255).astype(np.uint8)
 
 # ---------- Menu Overlay Function ----------
 def draw_menu_overlay(frame, active_filters):
@@ -121,9 +121,8 @@ def draw_menu_overlay(frame, active_filters):
         ("[f] Fisheye", active_filters["fisheye"]),
         ("[s] Sharpen", active_filters["sharpen"]),
         ("[p] Green/Teal", active_filters["green_teal"]),
-        ("[d] Dog Vision", active_filters["dog"]),
-        ("[h] Heatmap", active_filters["heatmap"]),
-        ("[e] Snapshot", None),
+        ("[d] Bat Vision", active_filters["bat"]),
+        ("[h] Snake Vision", active_filters["snake_vision"]),
         ("[q] Quit", None),
     ]
 
@@ -149,9 +148,9 @@ apply_glitch = False
 apply_fisheye = False
 apply_sharpen = False
 apply_green_teal = False
-apply_dog = False
+apply_bat = False
 apply_vblur = False
-apply_heatmap_live = False
+apply_snake_vision_live = False
 
 glitch_intensity = 0.1
 vision_mode = '20/20'
@@ -176,12 +175,12 @@ while True:
         frame = apply_sharpening(frame)
     if apply_green_teal:
         frame = apply_green_teal_filter(frame)
-    if apply_dog:
-        frame = dog_vision(frame)
+    if apply_bat:
+        frame = bat_vision(frame)
     if apply_vblur:
         frame = simulate_vision_blur(frame, vision_mode)
-    if apply_heatmap_live:
-        frame = apply_heatmap(frame)
+    if apply_snake_vision_live:
+        frame = apply_snake_vision(frame)
 
     active_filters = {
         "motion": apply_motion,
@@ -189,9 +188,9 @@ while True:
         "fisheye": apply_fisheye,
         "sharpen": apply_sharpen,
         "green_teal": apply_green_teal,
-        "dog": apply_dog,
+        "bat": apply_bat,
         "vblur": apply_vblur,
-        "heatmap": apply_heatmap_live
+        "snake_vision": apply_snake_vision_live
     }
 
     if show_menu:
@@ -221,7 +220,7 @@ while True:
     elif key == ord('p'):
         apply_green_teal = not apply_green_teal
     elif key == ord('d'):
-        apply_dog = not apply_dog
+        apply_bat = not apply_bat
     elif key == ord('v'):
         apply_vblur = not apply_vblur
         print(f"Short-sightedness simulation {'enabled' if apply_vblur else 'disabled'}")
@@ -238,15 +237,8 @@ while True:
         vision_mode = '20/200'
         print("Vision mode set to 20/200")
     elif key == ord('h'):
-        apply_heatmap_live = not apply_heatmap_live
-        print(f"Heatmap effect {'enabled' if apply_heatmap_live else 'disabled'}")
-    elif key == ord('e'):
-        vision_input = input("Enter eyesight level (e.g., 20/20, 20/100): ")
-        simulated_blur = simulate_eyesight_blur(frame.copy(), vision=vision_input)
-        cv2.imshow(f"Simulated Vision: {vision_input}", simulated_blur)
-        filename = f"vision_{vision_input.replace('/', '_')}.jpg"
-        cv2.imwrite(filename, simulated_blur)
-        print(f"Simulated vision image saved as {filename}")
+        apply_snake_vision_live = not apply_snake_vision_live
+        print(f"snake_vision effect {'enabled' if apply_snake_vision_live else 'disabled'}")
 
 cap.release()
 cv2.destroyAllWindows()
